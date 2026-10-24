@@ -247,7 +247,10 @@ test_init_is_rerunnable_and_never_overwrites() {
   fixture GET_repos_o_r <<< '{"full_name": "o/r"}'
   git remote set-url origin https://github.com/o/r.git
   "$RALPH" init --prompts --skills > /dev/null || fail "init failed"
-  [ -f .ralphrc ] && [ -f ralph/project.md ] && [ -f ralph/build.md ] || fail "files missing"
+  local f
+  for f in .ralphrc ralph/project.md ralph/build.md; do
+    [ -f "$f" ] || fail "$f missing"
+  done
   [ -f .claude/skills/ralph-issue/SKILL.md ] || fail "skill missing"
   echo 'mine' > ralph/project.md
   "$RALPH" init > /dev/null
