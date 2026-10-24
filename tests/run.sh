@@ -9,7 +9,8 @@ set -uo pipefail
 LIB=$(cd "$(dirname "$0")/.." && pwd)
 RALPH="$LIB/bin/ralph"
 FILTER="${1:-}"
-TMP_ROOT=$(mktemp -d)
+# Resolved: on macOS the temp dir is under /var, a symlink to /private/var.
+TMP_ROOT=$(cd "$(mktemp -d)" && pwd -P)
 trap 'rm -rf "$TMP_ROOT"' EXIT
 pass=0
 fail=0
