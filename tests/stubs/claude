@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Fake `claude` for the tests: saves its arguments (the prompt is the last one) and prints a
+# stream-json transcript with one text message and one result event.
+
+set -euo pipefail
+printf '%s\n' "$@" > "$CLAUDE_ARGS"
+pwd > "$CLAUDE_CWD"
+echo '{"type":"assistant","message":{"content":[{"type":"text","text":"fake build done"}]}}'
+echo 'not json, like stderr'
+echo '{"type":"result","num_turns":3,"total_cost_usd":0.25,"duration_ms":4000,"is_error":false}'

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Fake `gh` for the tests. Logs every call to $GH_LOG and answers `gh api` from fixture files in
+# $GH_FIXTURES, named after the method and path with every non-alphanumeric run turned into `_`
+# (`GET repos/o/r/issues/5` → `GET_repos_o_r_issues_5`). A fixture with a numeric suffix answers
+# from that call on (`….1`, `….4`: calls 1-3 get .1, call 4 on gets .4).
+# Unmatched GETs fail like a 404; unmatched writes print {}.
+
+set -euo pipefail
+echo "$*" >> "$GH_LOG"
+
+[ "${1:-}" = label ] && exit 0
+[ "${1:-}" = api ] || {
+  echo "gh stub: unsupported: $*" >&2
+  exit 1
+}
+shift
+
+method=GET path="" jq_expr=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -X)
+      method=$2
+      shift 2
+      ;;
+    --jq)
+      jq_expr=$2
+      shift 2
+      ;;
+    -f | -F)
+      [ "$method" = GET ] && method=POST
+      shift 2
+      ;;
+    --paginate) shift ;;
+    *)
+      path=$1
+      shift
+      ;;
+  esac
+done
+
+key=$(printf '%s %s' "$method" "$path" | sed -E 's/[^A-Za-z0-9]+/_/g; s/_$//')
+counter="$GH_FIXTURES/.count.$key"
+n=$(($(cat "$counter" 2> /dev/null || echo 0) + 1))
+echo "$n" > "$counter"
+
+file=""
+[ -f "$GH_FIXTURES/$key" ] && file="$GH_FIXTURES/$key"
+for i in $(seq 1 "$n"); do
+  [ -f "$GH_FIXTURES/$key.$i" ] && file="$GH_FIXTURES/$key.$i"
+done
+
+if [ -z "$file" ]; then
+  if [ "$method" = GET ]; then
+    echo "gh: Not Found (HTTP 404) [$key]" >&2
+    exit 1
+  fi
+  response='{}'
+else
+  response=$(cat "$file")
+fi
+
+if [ -n "$jq_expr" ]; then
+  jq -r "$jq_expr" <<< "$response"
+else
+  printf '%s\n' "$response"
+fi

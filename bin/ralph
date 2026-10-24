@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# ralph: run GitHub issues through Claude Code, one fresh session per phase (build → review → merge).
+# This is the single entry point; every subcommand lives in lib/cmd/<name>.sh.
+
+set -eo pipefail
+
+# macOS ships bash 3.2; ralph needs 4.2+ (`brew install bash` puts a newer one first on PATH).
+if [ "${BASH_VERSINFO[0]}" -lt 4 ] || { [ "${BASH_VERSINFO[0]}" -eq 4 ] && [ "${BASH_VERSINFO[1]}" -lt 2 ]; }; then
+  echo "ralph: needs bash 4.2 or newer (this is $BASH_VERSION). On macOS: brew install bash" >&2
+  exit 1
+fi
+
+# Resolve the install dir through symlinks (npm's bin link, ~/.local/bin/ralph).
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir=$(cd -P "$(dirname "$src")" && pwd)
+  src=$(readlink "$src")
+  [[ "$src" != /* ]] && src="$dir/$src"
+done
+RALPH_LIB=$(cd -P "$(dirname "$src")/.." && pwd)
+RALPH_BIN="$RALPH_LIB/bin/ralph"
+export RALPH_LIB RALPH_BIN
+
+usage() {
+  cat << 'EOF'
+Usage: ralph <command> [args]
+
+Loop
+  run [issue]                  Work every unblocked issue in order, or just <issue>, then exit.
+  next                         Print the next unblocked issue number (nothing if none).
+
+Phase helpers (also called by the phase sessions)
+  prompt <phase> [issue]       Print the composed instructions for build|review|merge.
+  progress pull|push <issue>   Sync logs/issue-<issue>.progress.md with its issue comment.
+  worktree create|remove <issue>
+  checks                       Run the project's local checks (lint, typecheck, tests).
+  merge <issue>                Wait for CI on the issue's PR, merge it, close and unblock.
+
+Setup
+  init [--prompts] [--skills]  Add .ralphrc, ralph/project.md, .gitignore entries and labels.
+                               --prompts copies the default prompts in to customize them;
+                               --skills installs the /ralph-issue Claude Code skill.
+  config                       Print the resolved configuration.
+  version
+EOF
+}
+
+cmd="${1:-help}"
+[ $# -gt 0 ] && shift
+case "$cmd" in
+  run | next | prompt | progress | worktree | checks | merge | init | config)
+    exec bash "$RALPH_LIB/lib/cmd/$cmd.sh" "$@"
+    ;;
+  version | --version | -v)
+    jq -r .version "$RALPH_LIB/package.json"
+    ;;
+  help | --help | -h)
+    usage
+    ;;
+  *)
+    echo "ralph: unknown command '$cmd'" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

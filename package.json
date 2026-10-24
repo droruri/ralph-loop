@@ -1,0 +1,29 @@
+{
+  "name": "ralph-loop",
+  "version": "0.1.0",
+  "description": "Run GitHub issues through Claude Code, one fresh session per phase (build → review → merge).",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/droruri/ralph-loop.git"
+  },
+  "bin": {
+    "ralph": "bin/ralph"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "prompts",
+    "templates",
+    "skills",
+    "install.sh"
+  ],
+  "scripts": {
+    "lint": "shellcheck -x bin/ralph lib/*.sh lib/cmd/*.sh install.sh tests/*.sh",
+    "test": "bash tests/run.sh"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ]
+}

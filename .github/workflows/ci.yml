@@ -1,0 +1,20 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install shellcheck and jq (macOS)
+        if: runner.os == 'macOS'
+        run: brew install shellcheck jq bash
+      - name: Lint
+        run: shellcheck -x bin/ralph lib/*.sh lib/cmd/*.sh install.sh tests/*.sh tests/stubs/*
+      - name: Test
+        run: bash tests/run.sh

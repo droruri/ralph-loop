@@ -1,0 +1,35 @@
+# ralph configuration (KEY=value, sourced by bash). Environment variables win over this file,
+# e.g. `RALPH_MODEL=opus ralph run 12`. Everything here is optional; defaults shown.
+
+# GitHub repo; detected from the origin remote when unset.
+# RALPH_REPO=owner/repo
+# RALPH_BASE_BRANCH=main
+# RALPH_BRANCH_PREFIX=feature/issue-
+# RALPH_MERGE_METHOD=squash          # squash | merge | rebase
+
+# Models: build on RALPH_MODEL; review and merge on RALPH_CHEAP_MODEL; an issue still open after
+# all phases gets one more pass on RALPH_ESCALATE_MODEL (empty: no extra pass).
+# RALPH_MODEL=sonnet
+# RALPH_CHEAP_MODEL=haiku
+# RALPH_ESCALATE_MODEL=opus
+
+# Phase sessions load only these tools and plugins (each turn re-sends their definitions).
+# RALPH_TOOLS=Bash,Read,Edit,Write,Skill,Agent
+# RALPH_PLUGINS=mattpocock-skills@claude-plugins-official,caveman@caveman
+
+# What the prompts call on. `none` = the session does it inline.
+# RALPH_SPEC_DOC=docs/plan.md
+# RALPH_PLAN_SKILL=druri-plan
+# RALPH_TDD_SKILL=mattpocock-skills:tdd
+# RALPH_REVIEWER_AGENT=caveman:cavecrew-reviewer
+# RALPH_INVESTIGATOR_AGENT=caveman:cavecrew-investigator
+
+# Worktree setup and checks. `auto` detects from the lockfile / package.json scripts
+# (lint, typecheck, test); empty skips.
+# RALPH_INSTALL_CMD=auto
+# RALPH_CHECKS_CMD=auto              # e.g. scripts/ralph-checks.sh
+# RALPH_LINK_FILES=.env              # linked from the main checkout into each worktree
+
+# Prompt overrides live here: <dir>/shared.md, build.md, review.md, merge.md replace the
+# defaults; <dir>/project.md is appended to every phase.
+# RALPH_PROMPTS_DIR=ralph
